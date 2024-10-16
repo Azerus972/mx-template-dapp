@@ -1,101 +1,69 @@
-import { contractAddress } from 'config';
+import { useState, useEffect } from 'react';
 import { AuthRedirectWrapper } from 'wrappers';
-import {
-  Account,
-  PingPongAbi,
-  SignMessage,
-  NativeAuth,
-  BatchTransactions,
-  PingPongRaw,
-  PingPongService,
-  Transactions
-} from './widgets';
-import { useScrollToElement } from 'hooks';
+import { Account } from './widgets';
 import { Widget } from './components';
 import { WidgetType } from 'types/widget.types';
+import { useGetAccountInfo } from '@multiversx/sdk-dapp/hooks';
+import { Modal } from './components/Modal';
 
 const WIDGETS: WidgetType[] = [
   {
-    title: 'Account',
+    title: 'Compte',
     widget: Account,
-    description: 'Connected account details',
+    description: 'Détails du compte connecté',
     reference: 'https://docs.multiversx.com/sdk-and-tools/sdk-dapp/#account'
-  },
-  {
-    title: 'Ping & Pong (Manual)',
-    widget: PingPongRaw,
-    description:
-      'Smart Contract interactions using manually formulated transactions',
-    reference:
-      'https://docs.multiversx.com/sdk-and-tools/indices/es-index-transactions/',
-    anchor: 'ping-pong-manual'
-  },
-  {
-    title: 'Ping & Pong (ABI)',
-    widget: PingPongAbi,
-    description:
-      'Smart Contract interactions using the ABI generated transactions',
-    reference:
-      'https://docs.multiversx.com/sdk-and-tools/sdk-js/sdk-js-cookbook/#using-interaction-when-the-abi-is-available',
-    anchor: 'ping-pong-abi'
-  },
-  {
-    title: 'Ping & Pong (Backend)',
-    widget: PingPongService,
-    description:
-      'Smart Contract interactions using the backend generated transactions',
-    reference: 'https://github.com/multiversx/mx-ping-pong-service',
-    anchor: 'ping-pong-backend'
-  },
-  {
-    title: 'Sign message',
-    widget: SignMessage,
-    description: 'Message signing using the connected account',
-    reference: 'https://docs.multiversx.com/sdk-and-tools/sdk-dapp/#account-1',
-    anchor: 'sign-message'
-  },
-  {
-    title: 'Native auth',
-    widget: NativeAuth,
-    description:
-      'A secure authentication token can be used to interact with the backend',
-    reference: 'https://github.com/multiversx/mx-sdk-js-native-auth-server'
-  },
-  {
-    title: 'Batch Transactions',
-    widget: BatchTransactions,
-    description:
-      'For complex scenarios transactions can be sent in the desired group/sequence',
-    reference:
-      'https://github.com/multiversx/mx-sdk-dapp#sending-transactions-synchronously-in-batches',
-    anchor: 'batch-transactions'
-  },
-  {
-    title: 'Transactions (All)',
-    widget: Transactions,
-    description: 'List transactions for the connected account',
-    reference:
-      'https://api.elrond.com/#/accounts/AccountController_getAccountTransactions'
-  },
-  {
-    title: 'Transactions (Ping & Pong)',
-    widget: Transactions,
-    props: { receiver: contractAddress },
-    description: 'List transactions filtered for a given Smart Contract',
-    reference:
-      'https://api.elrond.com/#/accounts/AccountController_getAccountTransactions'
   }
 ];
 
+const REQUIRED_ZPAY = 1000;
+const ZPAY_IDENTIFIER = 'ZPAY-247875';
+
 export const Dashboard = () => {
-  useScrollToElement();
+  const { address } = useGetAccountInfo();
+  const [hasEnoughZPAY, setHasEnoughZPAY] = useState<boolean | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const checkZPAYBalance = async () => {
+      try {
+        const response = await fetch(`https://api.multiversx.com/accounts/${address}/tokens?identifier=${ZPAY_IDENTIFIER}`);
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const balance = parseInt(data[0].balance, 10);
+          const hasEnough = balance >= REQUIRED_ZPAY;
+          setHasEnoughZPAY(hasEnough);
+          setShowModal(!hasEnough);
+        } else {
+          setHasEnoughZPAY(false);
+          setShowModal(true);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification du solde ZPAY:", error);
+        setHasEnoughZPAY(false);
+        setShowModal(true);
+      }
+    };
+
+    if (address) {
+      checkZPAYBalance();
+    }
+  }, [address]);
 
   return (
     <AuthRedirectWrapper>
       <div className='flex flex-col gap-6 max-w-3xl w-full'>
-        {WIDGETS.map((element) => (
+        {hasEnoughZPAY === true && WIDGETS.map((element) => (
           <Widget key={element.title} {...element} />
         ))}
+        {showModal && (
+          <Modal onClose={() => setShowModal(false)}>
+            <h2 className="text-xl font-bold mb-4">Solde ZPAY insuffisant</h2>
+            <p>
+              Pour utiliser ce service, vous devez posséder au moins {REQUIRED_ZPAY} {ZPAY_IDENTIFIER} sur votre adresse.
+              Veuillez acquérir les jetons nécessaires avant de continuer.
+            </p>
+          </Modal>
+        )}
       </div>
     </AuthRedirectWrapper>
   );

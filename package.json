@@ -14,6 +14,7 @@
     "@multiversx/sdk-network-providers": "2.8.0",
     "axios": "1.7.4",
     "classnames": "2.3.2",
+    "lucide-react": "^0.453.0",
     "moment": "2.29.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -86,8 +87,5 @@
     "vite-plugin-node-polyfills": "0.14.1",
     "vite-plugin-svgr": "4.0.0",
     "vite-tsconfig-paths": "4.2.1"
-  },
-  "resolutions": {
-    "**/*/nth-check": "2.0.1"
   }
 }

@@ -13,10 +13,10 @@ export const Footer = () => {
         <a
           target='_blank'
           className='flex items-center text-sm hover:underline'
-          href='https://multiversx.com/'
+          href='https://x.com/kmcpg'
         >
           Made with <HeartIcon className='mx-1 fill-gray-400' /> by the
-          MultiversX team
+          KMCPG
         </a>
       </div>
     </footer>
