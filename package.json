@@ -34,7 +34,8 @@
     "copy:mainnet-config": "cp ./src/config/config.mainnet.ts ./src/config/index.ts",
     "test": "jest",
     "wdio-smoke": "wdio run wdio/wdio.conf.ts",
-    "smoke": "wdio run wdio/wdio.conf.ts --suite smoke"
+    "smoke": "wdio run wdio/wdio.conf.ts --suite smoke",
+    "build": "vite build"
   },
   "browserslist": [
     ">0.2%",
